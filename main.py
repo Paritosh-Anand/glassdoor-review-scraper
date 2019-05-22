@@ -178,10 +178,26 @@ def scrape(field, review, author):
 
     def scrape_pros(review):
         try:
-            pros = review.find_element_by_class_name('pros')
-            expand_show_more(pros)
-            res = pros.text.replace('\nShow Less', '')
-        except Exception:
+            # logger.info("review --> %s" % dir(review))
+            description = review.find_element_by_class_name('description')
+            # logger.info("===description==%s==========%s" % (description.value_of_css_property, description.tag_name))
+
+            prosConsAdvice = description.find_element_by_class_name('prosConsAdvice')
+            # logger.info("==prosConsAdvice===%s==========%s" % (prosConsAdvice.value_of_css_property, prosConsAdvice.tag_name))
+
+            row_elements = prosConsAdvice.find_elements_by_class_name('row')
+            row = row_elements[0]
+        
+            padToMd = row.find_element_by_class_name('padTopMd')
+            # logger.info("===padToMd==%s==========%s" % (padToMd.value_of_css_property, padToMd.tag_name))
+
+            mainText = padToMd.find_element_by_class_name('mainText')
+            # logger.info("==mainText===%s==========%s=" % (mainText.tag_name, mainText.get_attribute("innerHTML")))
+
+            res = mainText.get_attribute("innerHTML")
+
+        except Exception as e:
+            logger.exception(e)
             res = np.nan
         return res
 
@@ -357,20 +373,28 @@ def navigate_to_reviews():
 def sign_in():
     logger.info(f'Signing in to {args.username}')
 
-    url = 'https://www.glassdoor.com/profile/login_input.htm'
+    # url = 'https://www.glassdoor.com/profile/login_input.htm'
+    url = 'https://www.glassdoor.co.in/index.htm?countryRedirect=true'
     browser.get(url)
 
     # import pdb;pdb.set_trace()
 
+    # //*[@id="TopNav"]/nav/div[2]/ul[3]/li[2]/a
+    # //*[@id="LoginModal"]/div/div/div[2]/div/div[2]/div/div[1]/div[4]/form/div[3]/div[1]/button
+    sign_in_btn = browser.find_element_by_xpath('//*[@id="TopNav"]/nav/div[2]/ul[3]/li[2]/a')
+    sign_in_btn.click()
+    time.sleep(1)
+
     email_field = browser.find_element_by_name('username')
     password_field = browser.find_element_by_name('password')
-    submit_btn = browser.find_element_by_xpath('//button[@type="submit"]')
+    # submit_btn = browser.find_element_by_xpath('//button[@type="submit"]')
+    submit_btn = browser.find_element_by_xpath('//*[@id="LoginModal"]/div/div/div[2]/div/div[2]/div/div[1]/div[4]/form/div[3]/div[1]/button')
 
     email_field.send_keys(args.username)
     password_field.send_keys(args.password)
     submit_btn.click()
 
-    time.sleep(1)
+    time.sleep(20)
 
 
 def get_browser():
